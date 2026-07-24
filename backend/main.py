@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Set, Optional
 from dataclasses import dataclass, field, asdict
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -26,12 +27,32 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
-if not ENCRYPTION_KEY:
-    ENCRYPTION_KEY = Fernet.generate_key()
-    logger.warning("ENCRYPTION_KEY not set, generated random key (not persistent across restarts)")
+KEY_FILE = Path("/app/.encryption_key")
 
-fernet = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
+def load_or_generate_key() -> bytes:
+    env_key = os.environ.get("ENCRYPTION_KEY")
+    if env_key:
+        return env_key.encode() if isinstance(env_key, str) else env_key
+    
+    if KEY_FILE.exists():
+        try:
+            key = KEY_FILE.read_bytes().strip()
+            logger.info("Loaded encryption key from file")
+            return key
+        except Exception as e:
+            logger.warning(f"Failed to load key file: {e}")
+    
+    key = Fernet.generate_key()
+    try:
+        KEY_FILE.write_bytes(key)
+        logger.info(f"Generated new encryption key: {key.decode()}")
+        logger.info("IMPORTANT: Save this key as ENCRYPTION_KEY environment variable for persistence across restarts")
+    except Exception as e:
+        logger.warning(f"Could not save key file: {e}")
+    return key
+
+ENCRYPTION_KEY = load_or_generate_key()
+fernet = Fernet(ENCRYPTION_KEY)
 
 ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH")
 ADMIN_PASSWORD_SALT = os.environ.get("ADMIN_PASSWORD_SALT", secrets.token_hex(16))

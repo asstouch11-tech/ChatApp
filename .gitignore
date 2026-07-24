@@ -42,6 +42,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.encryption_key
 
 # Logs
 *.log
