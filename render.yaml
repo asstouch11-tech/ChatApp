@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: chat-app
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: ADMIN_PASSWORD_SALT
+        generateValue: true
+    autoDeploy: true
+    healthCheckPath: /health
+    plan: free

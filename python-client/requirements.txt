@@ -1,0 +1,5 @@
+websockets==12.0
+cryptography==42.0.0
+aiohttp==3.9.1
+pywin32==306
+pyinstaller==6.3.0
