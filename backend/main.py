@@ -1,16 +1,8 @@
 import os
-import json
-import asyncio
-import asyncio.tasks
-import secrets
-import hashlib
-import hmac
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Set, Optional
-from dataclasses import dataclass, field, asdict
-from contextlib import asynccontextmanager
 from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -287,11 +279,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    with open("../frontend/index.html", "r") as f:
+    with open(FRONTEND_DIR / "index.html", "r") as f:
         return HTMLResponse(f.read())
 
 @app.get("/health")
